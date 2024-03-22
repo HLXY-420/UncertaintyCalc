@@ -5,7 +5,7 @@
   text-align: center;
 }
 
-math-field {
+#compute-formula {
   width: 60vw;
   font-size: 2rem;
   max-width: 800px;
@@ -26,4 +26,21 @@ p {
   padding: 8px;
 }
 
+.variable {
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+  outline: solid 2px rgba(255, 174, 0, 0.696);
+  @media (max-width: 920px) {
+    flex-direction: column;
+  }
+}
 
+.variable-child {
+  display: flex;
+  align-items: center;
+  font: 1em;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}

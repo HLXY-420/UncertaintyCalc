@@ -1,7 +1,7 @@
 export default function Header() {
     return (
         <header>
-            <h1>Uncertainty Calc</h1>
+            <h1>不确定度计算器</h1>
         </header>
     )
 }
