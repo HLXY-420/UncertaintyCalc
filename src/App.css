@@ -30,9 +30,12 @@ p {
   display: flex;
   align-items: center;
   font-size: 1em;
-  outline: solid 2px rgba(255, 174, 0, 0.696);
+  outline: solid 2px rgba(255, 255, 255, 0.696);
   @media (max-width: 920px) {
     flex-direction: column;
+  }
+  @media (prefers-color-scheme: light) {
+    outline: solid 2px rgba(0, 0, 0, 0.696);
   }
 }
 

@@ -25,13 +25,30 @@ ce.jsonSerializationOptions = {
 ce.numericMode = 'bignum'
 ce.precision = 15
 
-function bessel(formula: String, symbols: String[]) {
-  let res = []
+function synthetic(formula: String, symbols: String[], value: String) {
+  const isMul = true
+  // @ts-ignore
+  //console.log(ce.parse(formula).evaluate().toString())
+  // @ts-ignore
+  const preFormula = isMul ? ce.box(['Ln', ce.parse(formula)]) : ce.parse(formula)
+  let part = []
   //@ts-ignore
   for (let i = 0; i < symbols.length; i++) {
     //@ts-ignore
-    res.push(ce.box(["D", ce.parse(formula), ce.parse(symbols[i])]))
+    part.push(ce.box(['D', preFormula, ce.parse(symbols[i])]).evaluate())
   }
+  // @ts-ignore
+  let res = ce.box(['Sqrt', part.map((data, i) => ce.box(['Multiply', ['Square', data], ['Square', ce.parse('Δ_' + symbols[i])]])).reduce((a, b) => ce.box(['Add', a, b]), 0)])
+ 
+  // @ts-ignore
+  if (!isMul) {
+    // @ts-ignore
+    res = ce.box(['Equal', ce.parse(value), res])
+  } else {
+    // @ts-ignore
+    res = ce.box(['Equal', ce.box(['Divide', 'Δ_'+value, ce.parse(value)]), res])
+  }
+
   return res
 }
 
@@ -59,13 +76,31 @@ function App() {
     setNumberOfComponents(num)
   }
   const calculateFinalResult = () => {
-    const sum = componentsData ? componentsData.map((data, index) => {
-      return [data.value, data.uncertainty]
-    }) : [0, 0]
+    if (!(value.split('=').length == 2 && value.split('=')[1] !== '')) {
+      return ["请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）"]
+    }
+    let uncertaintyExpr = ce.parse(synthetic(value.split('=')[1], ce.parse(value.split('=')[1]).symbols, value.split('=')[0]).latex.split('=')[1]) ? ce.parse(synthetic(value.split('=')[1], ce.parse(value.split('=')[1]).symbols, value.split('=')[0]).latex.split('=')[1]) : ce.parse('0')
+
+    let data = componentsData ? componentsData : []
+    while (data?.length < numberOfComponents) {
+      data = data?.concat({ value: '0', uncertainty: '0' })
+    }
+
+    let variate = {}
+    for (let i = 0; i < data.length; i++) {
+      // @ts-ignore
+      variate[ce.parse(value.split('=')[1]).symbols[i]] = ce.parse(data[i].value).value
+      // @ts-ignore
+      variate['Delta_' + ce.parse(value.split('=')[1]).symbols[i]] = ce.parse(data[i].uncertainty).value
+    }
+    
+    // @ts-ignore
+    const sum = [ce.parse(value.split('=')[1]).subs(variate).evaluate().N().toString(), uncertaintyExpr.subs(variate).evaluate().N().toString(), ce.box(['Multiply', uncertaintyExpr, ce.parse(value.split('=')[1])]).subs(variate).evaluate().N().toString()]
     console.log(componentsData)
+    console.log(data)
+    console.log(variate)
     return sum
   }
-  const finalResult = calculateFinalResult()
 
   return (
     <>
@@ -88,20 +123,45 @@ function App() {
         </math-field>
         <p>您输入的公式: {
           //@ts-ignore
-          (value.split('=').length == 2) ? ce.parse(value.split('=')[1]).simplify().toString() : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
+          (value.split('=').length == 2 && value.split('=')[1] !== '') ? <math-field read-only style={{display: "inline-block"}}>{ce.parse(value).simplify().latex}</math-field> : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
         }</p>
-        <p>不确定度传递公式: {
+        <p>此公式中的变量有: {
           //@ts-ignore
-          (value.split('=').length == 2) ? bessel(value.split('=')[1], ce.parse(value.split('=')[1]).symbols).map(x => x.evaluate().toString()) : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
+          (value.split('=').length == 2 && value.split('=')[1] !== '') ? ce.parse(value.split('=')[1]).symbols.join(', ') : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
         }</p>
-        <p>变量: {
+        <div className='variable-child'>此公式的不确定度传递公式: &nbsp; {
           //@ts-ignore
-          (value.split('=').length == 2) ? ce.parse(value.split('=')[1]).symbols : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
-        }</p>
+          (value.split('=').length == 2 && value.split('=')[1] !== '') ? 
+          <div className='variable-child'>
+            <math-field read-only style={{display: "inline-block"}}>
+              {synthetic(value.split('=')[1], ce.parse(value.split('=')[1]).symbols, value.split('=')[0]).latex}
+            </math-field>
+            <p> = {calculateFinalResult()[1]}</p>
+          </div> 
+          : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
+        }</div>
         {Array.from({ length: numberOfComponents }, (_, i) => (
           <Variable key={i} ind={i} v={ce.parse(value.split('=')[1]).symbols[i].toString()} />
         ))}
-        <p>结果: {finalResult}</p>
+        <div className='variable-child'>平均预测值为: &nbsp; {
+          (value.split('=').length == 2 && value.split('=')[1] !== '') ?
+          <div className='variable-child'>
+            <math-field read-only style={{display: "inline-block"}}>
+              {'\\overline{' + ce.parse(value.split('=')[0]).latex + '}'}
+            </math-field>
+            <p> = {calculateFinalResult()[0]}</p>
+          </div>
+          : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
+        }, 总不确定度为: &nbsp; {
+          (value.split('=').length == 2 && value.split('=')[1] !== '') ?
+          <div className='variable-child'>
+            <math-field read-only style={{display: "inline-block"}}>
+              {'Δ_' + ce.parse(value.split('=')[0]).latex}
+            </math-field>
+            <p> = {calculateFinalResult()[2]}</p>
+          </div>
+          : '请输入完整的公式（包含单个等号，等号左侧应为单个变量，形如y=x）'
+        }</div>
       </div>
       <Footer />
     </>
