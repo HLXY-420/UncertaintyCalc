@@ -57,8 +57,15 @@ function SingleValue(props: { ind: number }) {
     const mf = useRef()
     useEffect(() => {
       // @ts-ignore
+      mf.current.mathVirtualKeyboardPolicy = 'manual'
+      // @ts-ignore
       mf.current.addEventListener("focusin", (evt) => {
+        window.mathVirtualKeyboard.show()
         window.mathVirtualKeyboard.layouts = 'numeric-only'
+      })
+      // @ts-ignore
+      mf.current.addEventListener("focusout", (evt) => {
+        window.mathVirtualKeyboard.hide()
       })
     })
 
