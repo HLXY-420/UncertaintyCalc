@@ -54,10 +54,20 @@ function SingleValue(props: { ind: number }) {
         }
     }
 
+    const mf = useRef()
+    useEffect(() => {
+      // @ts-ignore
+      mf.current.addEventListener("focusin", (evt) => {
+        window.mathVirtualKeyboard.layouts = 'numeric-only'
+      })
+    })
+
     return (
         <div className='variable-child'>
             <p>值: </p>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={
                 (evt) => {
                     handleInputChange(0, evt.target as HTMLInputElement)
@@ -66,6 +76,8 @@ function SingleValue(props: { ind: number }) {
             >{value[0]}</math-field>
             <p>不确定度（如无请填 0）: </p>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={
                 (evt) => {
                     handleInputChange(1, evt.target as HTMLInputElement)
@@ -108,32 +120,57 @@ function MultipleValues(props: { ind: number }) {
             updateData(props.ind, { value: input[0], uncertainty: input[1] })
         }
     }
+
+    const mf = useRef()
+    useEffect(() => {
+      // @ts-ignore
+      mf.current.mathVirtualKeyboardPolicy = 'manual'
+      // @ts-ignore
+      mf.current.addEventListener("focusin", (evt) => {
+        window.mathVirtualKeyboard.layouts = 'numeric-only'
+      })
+    })
+
     return (
         <>
         <div className='variable-child'>
             <p>测量值（6组）: </p>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={(evt) => handleInputChange(0, evt.target as HTMLInputElement)}
             >{value[0]}</math-field>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={(evt) => handleInputChange(1, evt.target as HTMLInputElement)}
             >{value[1]}</math-field>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={(evt) => handleInputChange(2, evt.target as HTMLInputElement)}
             >{value[2]}</math-field>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={(evt) => handleInputChange(3, evt.target as HTMLInputElement)}
             >{value[3]}</math-field>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={(evt) => handleInputChange(4, evt.target as HTMLInputElement)}
             >{value[4]}</math-field>
             <math-field
+              // @ts-ignore
+              ref={mf}
               onInput={(evt) => handleInputChange(5, evt.target as HTMLInputElement)}
             >{value[5]}</math-field>
         </div>
         <div className='variable-child'>
             <p>仪器误差: </p>
             <math-field
+              // @ts-ignore
+              ref={mf}
               // @ts-ignore
               onInput={
                 (evt: React.ChangeEvent<HTMLElement>) => {
