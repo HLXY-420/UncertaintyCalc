@@ -184,7 +184,7 @@ function MultipleValues(props: { ind: number }) {
                   // @ts-ignore
                   const standardDeviation = ce.box(['Sqrt', ce.box(['Divide', sum.map((data, _) => ce.box(['Square', ['Subtract', data, ce.parse(mean)]])).reduce((a, b) => ce.box(['Add', a, b])), 5])]).N().toString()
                   // @ts-ignore
-                  const totalUncertainty = ce.box(['Sqrt', ce.box(['Add', ce.box(['Sqrt', ( ce.parse((evt.target as HTMLInputElement).value.endsWith('.') ? (evt.target as HTMLInputElement).value + '0' : (evt.target as HTMLInputElement).value ))]), ce.box(['Square', ce.parse(standardDeviation)])])]).N().toString()        
+                  const totalUncertainty = ce.box(['Sqrt', ce.box(['Add', ce.box(['Square', ( ce.parse((evt.target as HTMLInputElement).value.endsWith('.') ? (evt.target as HTMLInputElement).value + '0' : (evt.target as HTMLInputElement).value ))]), ce.box(['Square', ce.parse(standardDeviation)])])]).N().toString()        
                   setResult([mean, standardDeviation, totalUncertainty])
                 
                   handleUpdateData([mean, totalUncertainty])
