@@ -25,26 +25,67 @@ ce.jsonSerializationOptions = {
 ce.numericMode = 'bignum'
 ce.precision = 15
 
+function traverseAndReplace(array: any[], charToReplace: string, replacementChar: string): void {
+  for (let i = 0; i < array.length; i++) {
+    const element = array[i]
+    if (Array.isArray(element)) {
+      traverseAndReplace(element, charToReplace, replacementChar)
+    } else if (typeof element === 'string') {
+      const modifiedString = element.replace(new RegExp(`(?<!\\w)(${charToReplace})(?!\\w)`, 'g'), replacementChar)
+      array[i] = modifiedString
+    }
+  }
+}
+
 function synthetic(formula: String, symbols: String[], value: String) {
   symbols = percolateSymbol(symbols)
   formula.replace('e', ce.parse('ExponentialE').N().toString())
   formula.replace('\\pi', ce.parse('Pi').N().toString())
   formula.replace('\\Pi', ce.parse('Pi').N().toString())
-  console.log(formula)
+  //console.log('formula: '+formula)
   const isMul = true
   // @ts-ignore
   //console.log(ce.parse(formula).evaluate().toString())
   // @ts-ignore
   const preFormula = isMul ? ce.box(['Ln', ce.parse(formula)]) : ce.parse(formula)
+
   let part = []
   //@ts-ignore
   for (let i = 0; i < symbols.length; i++) {
     //@ts-ignore
-    part.push(ce.box(['D', preFormula, ce.parse(symbols[i])]).evaluate())
+    part.push(ce.box(['D', preFormula, ce.parse(symbols[i])]).simplify().evaluate())
+    
+    console.log(part[i].toString())
+
+    if (part[i].toString() === '0') {
+      let iFormula = preFormula
+      // @ts-ignore
+      symbols.filter((item, index) => index != i).forEach((item, index) => {
+        let temp = iFormula.toJSON()
+        // @ts-ignore
+        traverseAndReplace(temp, item, '1')
+        console.log('t' + temp)
+        iFormula = ce.box(temp)
+      })
+
+      //console.log("i: " + iFormula.toString())
+      // @ts-ignore
+      part[i] = ce.box(['D', iFormula, ce.parse(symbols[i])]).simplify().evaluate()
+    }
   }
+
   // @ts-ignore
-  let res = ce.box(['Sqrt', part.map((data, i) => ce.box(['Multiply', ['Square', data], ['Square', ce.parse('Δ_' + symbols[i])]])).reduce((a, b) => ce.box(['Add', a, b]), 0)])
- 
+  let res = ce.box(['Sqrt', part.map((data, i) => ce.box(['Multiply', ce.box(['Square', data]), ['Square', ce.parse('Δ_' + symbols[i])]])).reduce((a, b) => ce.box(['Add', a, b]), 0)])
+  // @ts-ignore
+  // res = res.replace(removeBracketsRule)
+  // console.log(res.latex)
+  // console.log(res.latex.replace('{-1}^2', '{-2}').replace('{-1}^2', '{-2}').replace(/\(([^)]+)\)/g, (match, capturedChar) => {
+  //   return (capturedChar === `${capturedChar}^2` || capturedChar.length > 1) ? match : `(${capturedChar})^2`;
+  // }))
+  res = ce.parse(res.latex.replace('{-1}^2', '{-2}').replace('{-1}^2', '{-2}').replace(/\(([^)]+)\)/g, (match, capturedChar) => {
+    return (capturedChar === `${capturedChar}^2` || capturedChar.length > 1) ? match : `(${capturedChar})^2`;
+  }))
+
   // @ts-ignore
   if (!isMul) {
     // @ts-ignore
@@ -94,6 +135,7 @@ function App() {
     }
     let uncertaintyExpr = ce.parse(synthetic(value.split('=')[1], percolateSymbol(ce.parse(value.split('=')[1]).symbols), value.split('=')[0]).latex.split('=')[1]) ? ce.parse(synthetic(value.split('=')[1], percolateSymbol(ce.parse(value.split('=')[1]).symbols), value.split('=')[0]).latex.split('=')[1]) : ce.parse('0')
 
+    // console.log(uncertaintyExpr.toString())
     let data = componentsData ? componentsData : []
     while (data?.length < numberOfComponents) {
       data = data?.concat({ value: '0', uncertainty: '0' })
@@ -108,9 +150,9 @@ function App() {
     }
     
     // @ts-ignore
-    const sum = [ce.parse(value.split('=')[1]).subs(variate).evaluate().N().toString(), uncertaintyExpr.subs(variate).evaluate().N().toString(), ce.box(['Multiply', uncertaintyExpr, ce.parse(value.split('=')[1])]).subs(variate).evaluate().N().toString()]
+    const sum = [ce.parse(value.split('=')[1]).subs(variate).simplify().evaluate().N().toString(), uncertaintyExpr.subs(variate).simplify().evaluate().N().toString(), ce.box(['Multiply', uncertaintyExpr, ce.parse(value.split('=')[1])]).subs(variate).simplify().evaluate().N().toString()]
     
-    console.log(variate)
+    //console.log(variate)
     return sum
   }
 
