@@ -7,6 +7,8 @@ interface Selection {
     label: String
 }
 
+const rectifyInput = (str: string): string => (str.endsWith('.') || str.endsWith('\\ldots')) ? '0' : str
+
 export default function Variable(props: { ind: number, v: String }) {
   const [selectedOption, setSelectedOption] = useState<Selection>({ label: '多组测量值（默认）' })
   const options: Selection[] = [
@@ -106,14 +108,15 @@ function MultipleValues(props: { ind: number }) {
 
         const sum = newInputs.map((data, _) => {
             // @ts-ignore
-            return data ? ( data.endsWith('.') ? ce.parse(data + '0') : ce.parse(data) ) : ce.parse('0')
+            return data ? ( ce.parse(rectifyInput(data)) ) : ce.parse('0')
         })
+
         // @ts-ignore
         const mean = ce.box(['Divide', sum.reduce((a, b) => ce.box(['Add', a, b]), 0), ce.parse('6')]).N().toString()
         // @ts-ignore
         const standardDeviation = ce.box(['Sqrt', ce.box(['Divide', sum.map((data, _) => ce.box(['Square', ['Subtract', data, ce.parse(mean)]])).reduce((a, b) => ce.box(['Add', a, b])), 5])]).N().toString()
         // @ts-ignore
-        const totalUncertainty = ce.box(['Sqrt', ce.box(['Add', ce.box(['Sqrt', ( inst.endsWith('.') ? ce.parse(inst + '0') : ce.parse(inst) )]), ce.box(['Square', ce.parse(standardDeviation)])])]).N().toString()
+        const totalUncertainty = ce.box(['Sqrt', ce.box(['Add', ce.box(['Sqrt', ( ce.parse(rectifyInput(inst)) )]), ce.box(['Square', ce.parse(standardDeviation)])])]).N().toString()
 
         setResult([mean, standardDeviation, totalUncertainty])
         
@@ -184,14 +187,14 @@ function MultipleValues(props: { ind: number }) {
                   setInst((evt.target as HTMLInputElement).value)
                   const sum = value.map((data, _) => {
                     // @ts-ignore
-                    return data ? ( data.endsWith('.') ? ce.parse(data + '0') : ce.parse(data) ) : ce.parse('0')
+                    return data ? ( ce.parse(rectifyInput(data)) ) : ce.parse('0')
                   })
                   // @ts-ignore
                   const mean = ce.box(['Divide', sum.reduce((a, b) => ce.box(['Add', a, b]), 0), ce.parse('6')]).N().toString()
                   // @ts-ignore
                   const standardDeviation = ce.box(['Sqrt', ce.box(['Divide', sum.map((data, _) => ce.box(['Square', ['Subtract', data, ce.parse(mean)]])).reduce((a, b) => ce.box(['Add', a, b])), 5])]).N().toString()
                   // @ts-ignore
-                  const totalUncertainty = ce.box(['Sqrt', ce.box(['Add', ce.box(['Square', ( ce.parse((evt.target as HTMLInputElement).value.endsWith('.') ? (evt.target as HTMLInputElement).value + '0' : (evt.target as HTMLInputElement).value ))]), ce.box(['Square', ce.parse(standardDeviation)])])]).N().toString()        
+                  const totalUncertainty = ce.box(['Sqrt', ce.box(['Add', ce.box(['Square', ( ce.parse(rectifyInput((evt as React.ChangeEvent<HTMLElement>).target.value)))]), ce.box(['Square', ce.parse(standardDeviation)])])]).N().toString()        
                   setResult([mean, standardDeviation, totalUncertainty])
                 
                   handleUpdateData([mean, totalUncertainty])
