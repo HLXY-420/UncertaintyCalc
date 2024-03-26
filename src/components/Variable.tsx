@@ -7,7 +7,7 @@ interface Selection {
     label: String
 }
 
-const rectifyInput = (str: string): string => (str) ? ((str.endsWith('.') || str.endsWith('\\ldots')) ? '0' : str) : '0'
+const rectifyInput = (str: string): string => (str) ? (/^\d+([+\-\*\/]\d+)*(\.\d+)?$/.test(str) ? ((str.endsWith('.') || str.endsWith('\\ldots')) ? '0' : str) : '0') : '0'
 
 export default function Variable(props: { ind: number, v: String }) {
   const [selectedOption, setSelectedOption] = useState<Selection>({ label: '多组测量值（默认）' })
