@@ -55,7 +55,7 @@ function synthetic(formula: String, symbols: String[], value: String) {
     //@ts-ignore
     part.push(ce.box(['D', preFormula, ce.parse(symbols[i])]).simplify().evaluate())
     
-    console.log(part[i].toString())
+    // console.log(part[i].toString())
 
     if (part[i].toString() === '0') {
       let iFormula = preFormula
@@ -64,7 +64,7 @@ function synthetic(formula: String, symbols: String[], value: String) {
         let temp = iFormula.toJSON()
         // @ts-ignore
         traverseAndReplace(temp, item, '1')
-        console.log('t' + temp)
+        // console.log('t' + temp)
         iFormula = ce.box(temp)
       })
 
@@ -144,9 +144,9 @@ function App() {
     let variate = {}
     for (let i = 0; i < data.length; i++) {
       // @ts-ignore
-      variate[percolateSymbol(ce.parse(value.split('=')[1]).symbols)[i]] = ce.parse(data[i].value).value
+      variate[percolateSymbol(ce.parse(value.split('=')[1]).symbols)[i]] = ce.parse(data[i] ? data[i].value : '0').value
       // @ts-ignore
-      variate['Delta_' + percolateSymbol(ce.parse(value.split('=')[1]).symbols)[i]] = ce.parse(data[i].uncertainty).value
+      variate['Delta_' + percolateSymbol(ce.parse(value.split('=')[1]).symbols)[i]] = ce.parse(data[i] ? data[i].uncertainty : '0').value
     }
     
     // @ts-ignore
