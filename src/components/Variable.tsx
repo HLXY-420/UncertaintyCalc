@@ -45,8 +45,9 @@ function SingleValue(props: { ind: number }) {
         const newInputs = [...value]
         newInputs[index] = input.value
         setValue(newInputs)
-        newInputs[index] = rectifyInput(input.value)
-        handleUpdateData(newInputs)
+        let newInputRectified = [...value]
+        newInputRectified[index] = rectifyInput(input.value)
+        handleUpdateData(newInputRectified)
     }
 
     const contextValue = useContext(DataContext)
